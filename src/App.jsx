@@ -1,121 +1,208 @@
-import { useState } from 'react'
-import heroImg from './assets/hero.png'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
+import { useState, useEffect } from 'react'
+import {
+  getStudents,
+  createStudent,
+  updateStudent,
+  deleteStudent,
+} from './services/studentService'
 import './App.css'
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [students, setStudents] = useState([])
+  const [showForm, setShowForm] = useState(false)
+  const [editingId, setEditingId] = useState(null)
+
+  const [formData, setFormData] = useState({
+  name: '',
+  email: '',
+  age: '',
+  })
+
+  useEffect(() => {
+  async function loadStudents() {
+    try {
+      const data = await getStudents()
+      setStudents(data)
+    } catch (error) {
+      console.error('Error loading students:', error)
+    }
+  }
+
+  loadStudents()
+}, [])
+
+  function handleChange(event) {
+    const { name, value } = event.target
+
+    setFormData({
+      ...formData,
+      [name]: value,
+    })
+  }
+
+async function handleSubmit(event) {
+  event.preventDefault()
+
+  try {
+    const student = {
+      name: formData.name,
+      email: formData.email,
+      age: Number(formData.age),
+    }
+
+    if (editingId !== null) {
+      const updatedStudent = await updateStudent(editingId, student)
+
+      setStudents(
+        students.map((s) =>
+          s.id === editingId ? updatedStudent : s
+        )
+      )
+    } else {
+      const newStudent = await createStudent(student)
+
+      setStudents([...students, newStudent])
+    }
+
+    setFormData({
+      name: '',
+      email: '',
+      age: '',
+    })
+
+    setEditingId(null)
+    setShowForm(false)
+  } catch (error) {
+    console.error('Error saving student:', error)
+    alert('Failed to save student. Please check the backend.')
+  }
+}
+
+function handleEdit(student) {
+  setFormData({
+    name: student.name,
+    email: student.email,
+    age: student.age
+  })
+
+  setEditingId(student.id)
+  setShowForm(true)
+}
+
+async function handleDelete(id) {
+  const confirmed = window.confirm(
+    'Are you sure you want to delete this student?'
+  )
+
+  if (!confirmed) {
+    return
+  }
+
+  try {
+    await deleteStudent(id)
+
+    setStudents(
+      students.filter((student) => student.id !== id)
+    )
+  } catch (error) {
+    console.error('Error deleting student:', error)
+    alert('Failed to delete student. Please check the backend.')
+  }
+}
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+    <div className="app">
+      <header className="header">
+        <h1>Student Management System</h1>
+        <p>Manage student records in one place</p>
+      </header>
 
-      <div className="ticks"></div>
+      <main className="main">
+        <section className="dashboard">
+          <div className="card">
+            <h2>Total Students</h2>
+            <p className="count">{students.length}</p>
+          </div>
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
+          <div className="card">
+            <h2>Actions</h2>
+            <button onClick={() => setShowForm(!showForm)}>
+              {showForm ? 'Close Form' : 'Add Student'}
+            </button>
+          </div>
+        </section>
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
+        {showForm && (
+          <section className="students form-section">
+            <h2>{editingId !== null ? 'Edit Student' : 'Add Student'}</h2>
+
+            <form onSubmit={handleSubmit}>
+              <input
+                name="name"
+                placeholder="Student Name"
+                value={formData.name}
+                onChange={handleChange}
+                required
+              />
+
+              <input
+                name="email"
+                type="email"
+                placeholder="Email"
+                value={formData.email}
+                onChange={handleChange}
+                required
+              />
+
+              <input
+                name="age"
+                type="number"
+                min="1"
+                max="120"
+                placeholder="Age"
+                value={formData.age}
+                onChange={handleChange}
+                required
+              />
+              <button type="submit">{editingId !== null ? 'Update Student' : 'Save Student'}</button>
+            </form>
+          </section>
+        )}
+
+        <section className="students">
+          <h2>Students</h2>
+
+          {students.length === 0 ? (
+            <p>No students to display yet.</p>
+          ) : (
+            <table>
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Name</th>
+                  <th>Email</th>
+                  <th>Age</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {students.map((student) => (
+                  <tr key={student.id}>
+                    <td>{student.id}</td>
+                    <td>{student.name}</td>
+                    <td>{student.email}</td>
+                    <td>{student.age}</td>
+                    <td><button onClick={() => handleEdit(student)}>Edit</button>
+                    <button onClick={() => handleDelete(student.id)}className="delete-button">Delete</button></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </section>
+      </main>
+    </div>
   )
 }
 
