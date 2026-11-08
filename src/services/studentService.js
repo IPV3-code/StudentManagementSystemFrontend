@@ -10,6 +10,16 @@ export async function getStudents() {
   return response.json();
 }
 
+export async function getStudentById(id) {
+  const response = await fetch(`${API_URL}/${id}`);
+
+  if (!response.ok) {
+    throw new Error("Student not found");
+  }
+
+  return response.json();
+}
+
 export async function createStudent(student) {
   const response = await fetch(API_URL, {
     method: "POST",

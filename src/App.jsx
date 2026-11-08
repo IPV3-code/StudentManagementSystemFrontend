@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import {
   getStudents,
+  getStudentById,
   createStudent,
   updateStudent,
   deleteStudent,
@@ -12,6 +13,13 @@ function App() {
   const [showForm, setShowForm] = useState(false)
   const [editingId, setEditingId] = useState(null)
 
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+
+  const [searchId, setSearchId] = useState('')
+  const [searchResult, setSearchResult] = useState(null)
+  const [searchError, setSearchError] = useState('')
+
   const [formData, setFormData] = useState({
   name: '',
   email: '',
@@ -21,10 +29,16 @@ function App() {
   useEffect(() => {
   async function loadStudents() {
     try {
+      setLoading(true)
+      setError('')
+
       const data = await getStudents()
       setStudents(data)
     } catch (error) {
       console.error('Error loading students:', error)
+      setError('Unable to load students. Please check whether the backend is running.')
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -42,6 +56,20 @@ function App() {
 
 async function handleSubmit(event) {
   event.preventDefault()
+
+  const name = formData.name.trim()
+  const email = formData.email.trim()
+  const age = Number(formData.age)
+
+  if (!name || !email) {
+  alert('Name and email cannot be empty.')
+  return
+  }
+
+  if (!Number.isInteger(age) || age < 1 || age > 120) {
+  alert('Age must be a whole number between 1 and 120.')
+  return
+  }
 
   try {
     const student = {
@@ -110,6 +138,25 @@ async function handleDelete(id) {
   }
 }
 
+async function handleSearch(event) {
+  event.preventDefault()
+
+  setSearchResult(null)
+  setSearchError('')
+
+  if (!searchId.trim() || !Number.isInteger(Number(searchId)) || Number(searchId) <= 0) {
+    setSearchError('Please enter a valid student ID.')
+    return
+  }
+
+  try {
+    const student = await getStudentById(searchId)
+    setSearchResult(student)
+  } catch {
+    setSearchError('Student not found.')
+  }
+}
+
   return (
     <div className="app">
       <header className="header">
@@ -118,6 +165,38 @@ async function handleDelete(id) {
       </header>
 
       <main className="main">
+        <section className="students search-section">
+  <h2>Search Student by ID</h2>
+
+  <form onSubmit={handleSearch}>
+    <input
+      type="number"
+      min="1"
+      placeholder="Enter Student ID"
+      value={searchId}
+      onChange={(event) => setSearchId(event.target.value)}
+      required
+    />
+
+    <button type="submit">Search</button>
+  </form>
+
+  {searchError && (
+    <p className="error-message">{searchError}</p>
+  )}
+
+  {searchResult && (
+    <div className="search-result">
+      <h3>Student Found</h3>
+      <p><strong>ID:</strong> {searchResult.id}</p>
+      <p><strong>Name:</strong> {searchResult.name}</p>
+      <p><strong>Email:</strong> {searchResult.email}</p>
+      <p><strong>Age:</strong> {searchResult.age}</p>
+    </div>
+  )}
+</section>
+        {loading && <p>Loading students...</p>}
+        {error && <p className="error-message">{error}</p>}
         <section className="dashboard">
           <div className="card">
             <h2>Total Students</h2>
