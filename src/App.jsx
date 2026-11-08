@@ -24,6 +24,7 @@ function App() {
   name: '',
   email: '',
   age: '',
+  course: '',
   })
 
   useEffect(() => {
@@ -73,10 +74,11 @@ async function handleSubmit(event) {
 
   try {
     const student = {
-      name: formData.name,
-      email: formData.email,
-      age: Number(formData.age),
-    }
+    name: formData.name,
+    email: formData.email,
+    age: Number(formData.age),
+    course: formData.course,
+  }
 
     if (editingId !== null) {
       const updatedStudent = await updateStudent(editingId, student)
@@ -93,10 +95,11 @@ async function handleSubmit(event) {
     }
 
     setFormData({
-      name: '',
-      email: '',
-      age: '',
-    })
+    name: '',
+    email: '',
+    age: '',
+    course: '',
+  })
 
     setEditingId(null)
     setShowForm(false)
@@ -110,7 +113,8 @@ function handleEdit(student) {
   setFormData({
     name: student.name,
     email: student.email,
-    age: student.age
+    age: student.age,
+    course: student.course,
   })
 
   setEditingId(student.id)
@@ -243,6 +247,14 @@ async function handleSearch(event) {
                 onChange={handleChange}
                 required
               />
+
+              <input
+                name="course"
+                placeholder="Course (e.g. MCA, BCA, B.Tech)"
+                value={formData.course}
+                onChange={handleChange}
+                required
+              />
               <button type="submit">{editingId !== null ? 'Update Student' : 'Save Student'}</button>
             </form>
           </section>
@@ -261,6 +273,7 @@ async function handleSearch(event) {
                   <th>Name</th>
                   <th>Email</th>
                   <th>Age</th>
+                  <th>Course</th>
                   <th>Actions</th>
                 </tr>
               </thead>
@@ -272,6 +285,7 @@ async function handleSearch(event) {
                     <td>{student.name}</td>
                     <td>{student.email}</td>
                     <td>{student.age}</td>
+                    <td>{student.course}</td>
                     <td><button onClick={() => handleEdit(student)}>Edit</button>
                     <button onClick={() => handleDelete(student.id)}className="delete-button">Delete</button></td>
                   </tr>
