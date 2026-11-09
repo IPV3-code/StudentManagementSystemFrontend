@@ -1,4 +1,4 @@
-const API_URL = "http://localhost:8080/students";
+const API_URL = `${import.meta.env.VITE_API_BASE_URL}/students`;
 
 export async function getStudents() {
   const response = await fetch(API_URL);
