@@ -1,7 +1,7 @@
-const API_URL = `${import.meta.env.VITE_API_BASE_URL}/students`;
+const API_URL = `${import.meta.env.VITE_API_BASE_URL}/students/`;
 
 export async function getStudents() {
-  const response = await fetch(API_URL);
+  const response = await fetch(`${API_URL}`);
 
   if (!response.ok) {
     throw new Error("Failed to fetch students");
@@ -11,7 +11,7 @@ export async function getStudents() {
 }
 
 export async function getStudentById(id) {
-  const response = await fetch(`${API_URL}/${id}`);
+  const response = await fetch(`${API_URL}${id}`);
 
   if (!response.ok) {
     throw new Error("Student not found");
@@ -37,7 +37,7 @@ export async function createStudent(student) {
 }
 
 export async function updateStudent(id, student) {
-  const response = await fetch(`${API_URL}/${id}`, {
+  const response = await fetch(`${API_URL}${id}`, {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
@@ -53,7 +53,7 @@ export async function updateStudent(id, student) {
 }
 
 export async function deleteStudent(id) {
-  const response = await fetch(`${API_URL}/${id}`, {
+  const response = await fetch(`${API_URL}${id}`, {
     method: "DELETE",
   });
 
